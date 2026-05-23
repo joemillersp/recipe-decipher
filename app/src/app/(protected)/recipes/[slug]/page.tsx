@@ -1,5 +1,8 @@
 import recipes from "@/data/recipes.json"
-import { notFound } from "next/navigation"
+import {
+  notFound,
+} from "next/navigation"
+
 import DeleteButton from "./DeleteButton"
 
 export default async function RecipePage({

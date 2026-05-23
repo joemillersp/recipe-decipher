@@ -1,11 +1,18 @@
 import "./globals.css"
 import Link from "next/link"
 
-export default function RootLayout({
+import { getUser } from "@/lib/getUser"
+import UserMenu from "@/components/UserMenu"
+
+export const dynamic = "force-dynamic"
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const user = await getUser()
+
   return (
     <html lang="en">
       <body className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col">
@@ -39,18 +46,40 @@ export default function RootLayout({
               </Link>
 
               <Link
-                href="/recipes"
+                href="/about"
                 className="text-zinc-300 hover:text-white transition-colors"
               >
-                Recipes
+                About
               </Link>
 
-              <Link
-                href="/parse"
-                className="text-zinc-300 hover:text-white transition-colors"
-              >
-                Parse
-              </Link>
+              {user && (
+                <>
+                  <Link
+                    href="/recipes"
+                    className="text-zinc-300 hover:text-white transition-colors"
+                  >
+                    Recipes
+                  </Link>
+
+                  <Link
+                    href="/parse"
+                    className="text-zinc-300 hover:text-white transition-colors"
+                  >
+                    Parse
+                  </Link>
+                </>
+              )}
+
+              {!user ? (
+                <Link
+                  href="/login"
+                  className="border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 px-4 py-2 rounded-xl transition-colors"
+                >
+                  Login
+                </Link>
+              ) : (
+                <UserMenu email={user.email ?? ""} />
+              )}
             </nav>
           </div>
         </header>

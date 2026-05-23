@@ -3,6 +3,7 @@
 import { useState } from "react"
 
 export default function ParsePage() {
+
   const [recipe, setRecipe] = useState("")
   const [result, setResult] = useState<any>(null)
   const [loading, setLoading] = useState(false)

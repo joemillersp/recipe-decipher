@@ -1,7 +1,8 @@
 import Link from "next/link"
 import recipes from "@/data/recipes.json"
 
-export default function RecipesPage() {
+export default async function RecipesPage() {
+
   return (
     <div className="space-y-8">
       <div>
