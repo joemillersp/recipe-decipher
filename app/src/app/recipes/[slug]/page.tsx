@@ -19,7 +19,7 @@ export default async function RecipePage({
 
   return (
     <div className="space-y-10">
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div>
           <h1 className="text-5xl font-bold">
             {recipe.title}
@@ -28,6 +28,38 @@ export default async function RecipePage({
           <p className="text-xl text-zinc-400 mt-4">
             {recipe.description}
           </p>
+        </div>
+
+        <div className="flex gap-4 flex-wrap">
+          <div className="border border-zinc-800 bg-zinc-900 rounded-xl px-4 py-3">
+            <div className="text-xs text-zinc-500 uppercase">
+              Prep Time
+            </div>
+
+            <div className="text-lg font-medium">
+              {recipe.prepTime || "—"}
+            </div>
+          </div>
+
+          <div className="border border-zinc-800 bg-zinc-900 rounded-xl px-4 py-3">
+            <div className="text-xs text-zinc-500 uppercase">
+              Cook Time
+            </div>
+
+            <div className="text-lg font-medium">
+              {recipe.cookTime || "—"}
+            </div>
+          </div>
+
+          <div className="border border-zinc-800 bg-zinc-900 rounded-xl px-4 py-3">
+            <div className="text-xs text-zinc-500 uppercase">
+              Servings
+            </div>
+
+            <div className="text-lg font-medium">
+              {recipe.servings || "—"}
+            </div>
+          </div>
         </div>
 
         <DeleteButton slug={recipe.slug} />

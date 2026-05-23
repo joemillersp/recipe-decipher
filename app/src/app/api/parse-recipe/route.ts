@@ -1,4 +1,5 @@
 import OpenAI from "openai"
+import { recipeSchema } from "@/lib/recipeSchema"
 
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -13,7 +14,6 @@ const completion = await client.chat.completions.create({
     {
       role: "system",
       content: `
-Extract the recipe into this exact JSON schema.
 
 Generate a URL-safe slug from the title.
 
@@ -27,20 +27,9 @@ Do not combine steps.
 
 Only minimally clean formatting or obvious OCR issues.
 
-{
-  slug: string,
-  title: string,
-  description: string,
-  ingredients: {
-    amount: string,
-    unit: string,
-    ingredient: string
-  }[],
-  instructions: string[],
-  prepTime: string,
-  cookTime: string,
-  servings: string
-}
+Extract the recipe into this exact JSON schema:
+
+${recipeSchema}
 
 Rules:
 - Return ONLY valid JSON

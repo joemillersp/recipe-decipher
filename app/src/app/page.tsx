@@ -3,7 +3,7 @@ import Link from "next/link"
 export default function HomePage() {
   return (
     <div className="space-y-16">
-      <section className="py-12">
+      <section className="py-6">
         <div className="max-w-4xl">
           <div className="inline-flex items-center rounded-full border border-zinc-800 bg-zinc-900 px-4 py-2 text-sm text-zinc-400 mb-6">
             AI-powered recipe normalization
@@ -16,7 +16,7 @@ export default function HomePage() {
           </h1>
 
           <p className="text-xl text-zinc-400 mt-8 max-w-2xl leading-relaxed">
-            Parse messy recipes into structured cooking data using AI.
+            Parse messy recipes into structured cooking data using AI. 
             Build searchable, normalized recipes from screenshots,
             copied text, PDFs, and more.
           </p>
