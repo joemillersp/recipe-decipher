@@ -25,7 +25,8 @@ export default async function RecipePage({
       description,
       prep_time,
       cook_time,
-      servings
+      servings,
+      hero_image_url
     `)
     .eq("slug", slug)
     .is("deleted_at", null)
@@ -66,14 +67,26 @@ export default async function RecipePage({
   return (
     <div className="space-y-10">
       <div className="space-y-6">
-        <div>
-          <h1 className="text-5xl font-bold">
-            {recipe.title}
-          </h1>
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-5xl font-bold">
+              {recipe.title}
+            </h1>
 
-          <p className="text-xl text-zinc-400 mt-4">
-            {recipe.description}
-          </p>
+            <p className="text-xl text-zinc-400 mt-4">
+              {recipe.description}
+            </p>
+          </div>
+
+          {recipe.hero_image_url && (
+            <img
+              src={
+                recipe.hero_image_url
+              }
+              alt={recipe.title}
+              className="w-full max-w-5xl rounded-3xl border border-zinc-800"
+            />
+          )}
         </div>
 
         <div className="flex gap-4 flex-wrap">

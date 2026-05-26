@@ -13,6 +13,7 @@ export default async function RecipesPage() {
         slug,
         title,
         description,
+        hero_image_url,
         created_at
       `)
       .is("deleted_at", null)
@@ -41,20 +42,32 @@ export default async function RecipesPage() {
         </p>
       </div>
 
-      <div className="space-y-4">
+      <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
         {recipes?.map((recipe) => (
           <Link
             key={recipe.id}
             href={`/recipes/${recipe.slug}`}
-            className="block border border-zinc-800 bg-zinc-900 rounded-xl p-5 hover:bg-zinc-800 transition-colors"
+            className="block border border-zinc-800 bg-zinc-900 rounded-2xl overflow-hidden hover:bg-zinc-800 transition-colors"
           >
-            <h2 className="text-2xl font-semibold">
-              {recipe.title}
-            </h2>
+            {recipe.hero_image_url && (
+              <img
+                src={
+                  recipe.hero_image_url
+                }
+                alt={recipe.title}
+                className="w-full aspect-[4/3] object-cover border-b border-zinc-800"
+              />
+            )}
 
-            <p className="text-zinc-400 mt-2">
-              {recipe.description}
-            </p>
+            <div className="p-5">
+              <h2 className="text-2xl font-semibold">
+                {recipe.title}
+              </h2>
+
+              <p className="text-zinc-400 mt-2 line-clamp-3">
+                {recipe.description}
+              </p>
+            </div>
           </Link>
         ))}
 
