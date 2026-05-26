@@ -1,7 +1,6 @@
-import recipes from "@/data/recipes.json"
-import {
-  notFound,
-} from "next/navigation"
+import { notFound } from "next/navigation"
+
+import { createClient } from "@/utils/supabase/server"
 
 import DeleteButton from "./DeleteButton"
 
@@ -12,13 +11,57 @@ export default async function RecipePage({
 }) {
   const { slug } = await params
 
-  const recipe = recipes.find(
-    (r) => r.slug === slug
-  )
+  const supabase = await createClient()
 
-  if (!recipe) {
+  const {
+    data: recipe,
+    error,
+  } = await supabase
+    .from("recipes")
+    .select(`
+      id,
+      slug,
+      title,
+      description,
+      prep_time,
+      cook_time,
+      servings
+    `)
+    .eq("slug", slug)
+    .is("deleted_at", null)
+    .single()
+
+  if (error || !recipe) {
     notFound()
   }
+
+  const {
+    data: ingredients,
+  } = await supabase
+    .from("recipe_ingredients")
+    .select(`
+      id,
+      amount,
+      unit,
+      ingredient_text,
+      position
+    `)
+    .eq("recipe_id", recipe.id)
+    .is("deleted_at", null)
+    .order("position")
+
+  const {
+    data: instructions,
+  } = await supabase
+    .from("recipe_instructions")
+    .select(`
+      id,
+      instruction,
+      step_number
+    `)
+    .eq("recipe_id", recipe.id)
+    .is("deleted_at", null)
+    .order("step_number")
 
   return (
     <div className="space-y-10">
@@ -40,7 +83,7 @@ export default async function RecipePage({
             </div>
 
             <div className="text-lg font-medium">
-              {recipe.prepTime || "—"}
+              {recipe.prep_time || "—"}
             </div>
           </div>
 
@@ -50,7 +93,7 @@ export default async function RecipePage({
             </div>
 
             <div className="text-lg font-medium">
-              {recipe.cookTime || "—"}
+              {recipe.cook_time || "—"}
             </div>
           </div>
 
@@ -74,14 +117,19 @@ export default async function RecipePage({
         </h2>
 
         <ul className="space-y-3 text-zinc-300">
-          {recipe.ingredients.map((i, idx) => (
-            <li key={idx}>
-              <span className="font-medium text-white">
-                {i.amount} {i.unit}
-              </span>{" "}
-              {i.ingredient}
-            </li>
-          ))}
+          {ingredients?.map(
+            (ingredient) => (
+              <li key={ingredient.id}>
+                <span className="font-medium text-white">
+                  {ingredient.amount}{" "}
+                  {ingredient.unit}
+                </span>{" "}
+                {
+                  ingredient.ingredient_text
+                }
+              </li>
+            )
+          )}
         </ul>
       </div>
 
@@ -91,11 +139,16 @@ export default async function RecipePage({
         </h2>
 
         <ol className="space-y-5 list-decimal pl-6 text-zinc-300">
-          {recipe.instructions.map((step, idx) => (
-            <li key={idx} className="pl-2">
-              {step}
-            </li>
-          ))}
+          {instructions?.map(
+            (step) => (
+              <li
+                key={step.id}
+                className="pl-2"
+              >
+                {step.instruction}
+              </li>
+            )
+          )}
         </ol>
       </div>
     </div>

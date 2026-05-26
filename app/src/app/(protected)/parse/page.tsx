@@ -1,26 +1,37 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 export default function ParsePage() {
+  const router = useRouter()
 
   const [recipe, setRecipe] = useState("")
   const [result, setResult] = useState<any>(null)
-  const [loading, setLoading] = useState(false)
+
+  const [loading, setLoading] =
+    useState(false)
+
+  const [saving, setSaving] =
+    useState(false)
 
   async function parseRecipe() {
     setLoading(true)
 
     try {
-      const res = await fetch("/api/parse-recipe", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          recipe,
-        }),
-      })
+      const res = await fetch(
+        "/api/parse-recipe",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            recipe,
+          }),
+        }
+      )
 
       const data = await res.json()
 
@@ -31,15 +42,38 @@ export default function ParsePage() {
   }
 
   async function saveRecipe() {
-    await fetch("/api/save-recipe", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(result),
-    })
+    setSaving(true)
 
-    alert("Recipe saved")
+    try {
+      const res = await fetch(
+        "/api/save-recipe",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify(result),
+        }
+      )
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        alert(
+          data.error ??
+            "Failed to save recipe"
+        )
+
+        return
+      }
+
+      router.push(
+        `/recipes/${data.slug}`
+      )
+    } finally {
+      setSaving(false)
+    }
   }
 
   function updateField(
@@ -57,7 +91,9 @@ export default function ParsePage() {
     field: string,
     value: string
   ) {
-    const updated = [...result.ingredients]
+    const updated = [
+      ...result.ingredients,
+    ]
 
     updated[idx] = {
       ...updated[idx],
@@ -74,7 +110,9 @@ export default function ParsePage() {
     idx: number,
     value: string
   ) {
-    const updated = [...result.instructions]
+    const updated = [
+      ...result.instructions,
+    ]
 
     updated[idx] = value
 
@@ -92,13 +130,17 @@ export default function ParsePage() {
         </h1>
 
         <p className="text-zinc-400 mt-3">
-          Paste messy recipe content and normalize it into structured data.
+          Paste messy recipe content and
+          normalize it into structured
+          data.
         </p>
       </div>
 
       <textarea
         value={recipe}
-        onChange={(e) => setRecipe(e.target.value)}
+        onChange={(e) =>
+          setRecipe(e.target.value)
+        }
         className="border border-zinc-800 bg-zinc-900 rounded-xl w-full h-64 p-4"
         placeholder="Paste recipe..."
       />
@@ -108,7 +150,9 @@ export default function ParsePage() {
         disabled={loading}
         className="border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 px-6 py-3 rounded-xl min-w-[140px] transition-colors disabled:opacity-50"
       >
-        {loading ? "Parsing..." : "Parse"}
+        {loading
+          ? "Parsing..."
+          : "Parse"}
       </button>
 
       {result && (
@@ -122,7 +166,10 @@ export default function ParsePage() {
               <input
                 value={result.title}
                 onChange={(e) =>
-                  updateField("title", e.target.value)
+                  updateField(
+                    "title",
+                    e.target.value
+                  )
                 }
                 className="w-full mt-2 bg-zinc-950 border border-zinc-700 rounded-xl p-3"
               />
@@ -205,13 +252,18 @@ export default function ParsePage() {
             </h2>
 
             {result.ingredients.map(
-              (ingredient: any, idx: number) => (
+              (
+                ingredient: any,
+                idx: number
+              ) => (
                 <div
                   key={idx}
                   className="grid md:grid-cols-3 gap-3"
                 >
                   <input
-                    value={ingredient.amount}
+                    value={
+                      ingredient.amount
+                    }
                     onChange={(e) =>
                       updateIngredient(
                         idx,
@@ -224,7 +276,9 @@ export default function ParsePage() {
                   />
 
                   <input
-                    value={ingredient.unit}
+                    value={
+                      ingredient.unit
+                    }
                     onChange={(e) =>
                       updateIngredient(
                         idx,
@@ -237,7 +291,9 @@ export default function ParsePage() {
                   />
 
                   <input
-                    value={ingredient.ingredient}
+                    value={
+                      ingredient.ingredient
+                    }
                     onChange={(e) =>
                       updateIngredient(
                         idx,
@@ -259,7 +315,10 @@ export default function ParsePage() {
             </h2>
 
             {result.instructions.map(
-              (step: string, idx: number) => (
+              (
+                step: string,
+                idx: number
+              ) => (
                 <textarea
                   key={idx}
                   value={step}
@@ -277,9 +336,12 @@ export default function ParsePage() {
 
           <button
             onClick={saveRecipe}
-            className="border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 px-6 py-3 rounded-xl transition-colors"
+            disabled={saving}
+            className="border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 px-6 py-3 rounded-xl transition-colors disabled:opacity-50"
           >
-            Save Recipe
+            {saving
+              ? "Saving..."
+              : "Save Recipe"}
           </button>
         </div>
       )}

@@ -1,9 +1,9 @@
-import { createClient } from "@/utils/supabase/server"
 import { NextResponse } from "next/server"
 import { revalidatePath } from "next/cache"
+import { createActionClient } from "@/utils/supabase/server-actions"
 
 export async function GET() {
-  const supabase = await createClient()
+  const supabase = await createActionClient()
 
   await supabase.auth.signOut()
 
