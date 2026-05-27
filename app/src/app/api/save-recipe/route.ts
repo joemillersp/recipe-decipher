@@ -81,19 +81,38 @@ export async function POST(req: Request) {
 
       slug,
 
+      visibility:
+        recipe.visibility ??
+        "private",
+
       title: recipe.title,
+
+      title_provenance:
+        recipe.titleProvenance,
 
       description:
         recipe.description,
 
+      description_provenance:
+        recipe.descriptionProvenance,
+
       prep_time:
         recipe.prepTime,
+
+      prep_time_provenance:
+        recipe.prepTimeProvenance,
 
       cook_time:
         recipe.cookTime,
 
+      cook_time_provenance:
+        recipe.cookTimeProvenance,
+
       servings:
         recipe.servings,
+
+      servings_provenance:
+        recipe.servingsProvenance,
 
       source_text:
         recipe.sourceText ??
@@ -101,8 +120,6 @@ export async function POST(req: Request) {
 
       hero_image_url:
         heroImageUrl,
-
-      visibility: "private",
     })
     .select()
     .single()

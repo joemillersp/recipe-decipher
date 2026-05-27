@@ -8,12 +8,16 @@ const client = new OpenAI({
 export async function POST(req: Request) {
   const body = await req.json()
 
-const completion = await client.chat.completions.create({
-  model: "gpt-4.1-mini",
-  messages: [
-    {
-      role: "system",
-      content: `
+  const completion =
+    await client.chat.completions.create(
+      {
+        model: "gpt-4.1-mini",
+
+        messages: [
+          {
+            role: "system",
+
+            content: `
 
 You are a structured recipe extraction engine.
 
@@ -41,10 +45,14 @@ If information was inferred or guessed, mark as "inferred".
 
 Never falsely mark inferred information as verbatim.
 
+Never use "altered". That provenance value is reserved for user edits after parsing.
+
 Extract the recipe into this exact JSON schema:
 
 {
   "slug": string,
+
+  "visibility": "private" | "public",
 
   "title": {
     "value": string,
@@ -58,20 +66,13 @@ Extract the recipe into this exact JSON schema:
 
   "ingredients": [
     {
-      "amount": {
-        "value": string,
-        "provenance": "verbatim" | "normalized" | "inferred"
-      },
+      "amount": string,
 
-      "unit": {
-        "value": string,
-        "provenance": "verbatim" | "normalized" | "inferred"
-      },
+      "unit": string,
 
-      "ingredient": {
-        "value": string,
-        "provenance": "verbatim" | "normalized" | "inferred"
-      }
+      "ingredient": string,
+
+      "provenance": "verbatim" | "normalized" | "inferred"
     }
   ],
 
@@ -98,6 +99,10 @@ Extract the recipe into this exact JSON schema:
   }
 }
 
+Default visibility to "private".
+
+Ingredient provenance applies to the FULL ingredient line, not individual amount/unit/ingredient components.
+
 If prep time, cook time, or servings are not explicitly stated, infer a reasonable estimate when possible.
 
 Use culinary common sense and typical recipe expectations.
@@ -113,20 +118,25 @@ Rules:
 - Empty values should be empty strings
 - Never invent provenance carelessly
 `,
-    },
-    {
-      role: "user",
-      content: body.recipe,
-    },
-  ],
-  response_format: {
-    type: "json_object",
-  },
-})
+          },
+
+          {
+            role: "user",
+
+            content: body.recipe,
+          },
+        ],
+
+        response_format: {
+          type: "json_object",
+        },
+      }
+    )
 
   return Response.json(
     JSON.parse(
-      completion.choices[0].message.content || "{}"
+      completion.choices[0]
+        .message.content || "{}"
     )
   )
 }

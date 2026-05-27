@@ -35,7 +35,7 @@ export default function DeleteButton({
   return (
     <button
       onClick={deleteRecipe}
-      className="mt-6 border px-4 py-2 rounded-xl"
+      className="border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 px-5 py-3 rounded-xl transition-colors"
     >
       Delete Recipe
     </button>

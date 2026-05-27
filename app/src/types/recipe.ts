@@ -3,11 +3,11 @@ export type Visibility =
   | "unlisted"
   | "public"
 
-export type Provenance =
-  | "verbatim"
-  | "normalized"
-  | "inferred"
-  | "generated"
+type Provenance =
+    | "verbatim"
+    | "normalized"
+    | "inferred"
+    | "altered"
 
 export type Recipe = {
   id: string

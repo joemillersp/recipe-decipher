@@ -2,6 +2,8 @@ import { notFound } from "next/navigation"
 
 import { createClient } from "@/utils/supabase/server"
 
+import Link from "next/link"
+
 import DeleteButton from "./DeleteButton"
 
 export default async function RecipePage({
@@ -121,7 +123,18 @@ export default async function RecipePage({
           </div>
         </div>
 
-        <DeleteButton slug={recipe.slug} />
+        <div className="flex gap-3">
+          <Link
+            href={`/recipes/${recipe.slug}/edit`}
+            className="border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 px-5 py-3 rounded-xl transition-colors"
+          >
+            Edit Recipe
+          </Link>
+
+          <DeleteButton
+            slug={recipe.slug}
+          />
+        </div>
       </div>
 
       <div className="border border-zinc-800 bg-zinc-900 rounded-2xl p-6">
