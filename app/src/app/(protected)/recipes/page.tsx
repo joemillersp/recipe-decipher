@@ -1,15 +1,44 @@
 import Link from "next/link"
 
+import RecipeSearchForm from "@/components/RecipeSearchForm"
 import { createClient } from "@/utils/supabase/server"
 
-export default async function RecipesPage() {
+type RecipesPageProps = {
+  searchParams?: Promise<{
+    q?: string | string[]
+  }>
+}
+
+function getSearchQuery(
+  value: string | string[] | undefined
+) {
+  const query = Array.isArray(value)
+    ? value[0]
+    : value
+
+  return query?.trim() ?? ""
+}
+
+function escapeSearchTerm(term: string) {
+  return term.replace(
+    /[%_(),]/g,
+    " "
+  )
+}
+
+export default async function RecipesPage({
+  searchParams,
+}: RecipesPageProps) {
+  const params =
+    await searchParams
+
+  const searchQuery =
+    getSearchQuery(params?.q)
+
   const supabase =
     await createClient()
 
-  const {
-    data: recipes,
-    error,
-  } = await supabase
+  let query = supabase
     .from("recipes")
     .select(`
     id,
@@ -28,6 +57,20 @@ export default async function RecipesPage() {
     .order("created_at", {
       ascending: false,
     })
+
+  if (searchQuery) {
+    const escapedQuery =
+      escapeSearchTerm(searchQuery)
+
+    query = query.or(
+      `title.ilike.%${escapedQuery}%,description.ilike.%${escapedQuery}%`
+    )
+  }
+
+  const {
+    data: recipes,
+    error,
+  } = await query
 
 
   if (error) {
@@ -50,6 +93,12 @@ export default async function RecipesPage() {
           recipe data.
         </p>
       </div>
+
+      <RecipeSearchForm
+        action="/recipes"
+        query={searchQuery}
+        placeholder="Search public recipes"
+      />
 
       <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
         {recipes?.map(
@@ -102,7 +151,9 @@ export default async function RecipesPage() {
         {recipes?.length ===
           0 && (
             <div className="border border-zinc-800 bg-zinc-900 rounded-xl p-6 text-zinc-400">
-              No recipes yet.
+              {searchQuery
+                ? `No public recipes found for "${searchQuery}".`
+                : "No recipes yet."}
             </div>
           )}
       </div>

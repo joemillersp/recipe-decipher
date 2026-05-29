@@ -1,8 +1,40 @@
 import Link from "next/link"
 
+import RecipeSearchForm from "@/components/RecipeSearchForm"
 import { createClient } from "@/utils/supabase/server"
 
-export default async function MyRecipesPage() {
+type MyRecipesPageProps = {
+  searchParams?: Promise<{
+    q?: string | string[]
+  }>
+}
+
+function getSearchQuery(
+  value: string | string[] | undefined
+) {
+  const query = Array.isArray(value)
+    ? value[0]
+    : value
+
+  return query?.trim() ?? ""
+}
+
+function escapeSearchTerm(term: string) {
+  return term.replace(
+    /[%_(),]/g,
+    " "
+  )
+}
+
+export default async function MyRecipesPage({
+  searchParams,
+}: MyRecipesPageProps) {
+  const params =
+    await searchParams
+
+  const searchQuery =
+    getSearchQuery(params?.q)
+
   const supabase =
     await createClient()
 
@@ -10,10 +42,7 @@ export default async function MyRecipesPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const {
-    data: recipes,
-    error,
-  } = await supabase
+  let query = supabase
     .from("recipes")
     .select(`
       id,
@@ -29,6 +58,20 @@ export default async function MyRecipesPage() {
     .order("created_at", {
       ascending: false,
     })
+
+  if (searchQuery) {
+    const escapedQuery =
+      escapeSearchTerm(searchQuery)
+
+    query = query.or(
+      `title.ilike.%${escapedQuery}%,description.ilike.%${escapedQuery}%`
+    )
+  }
+
+  const {
+    data: recipes,
+    error,
+  } = await query
 
   if (error) {
     return (
@@ -49,6 +92,12 @@ export default async function MyRecipesPage() {
           Recipes you created.
         </p>
       </div>
+
+      <RecipeSearchForm
+        action="/recipes/my"
+        query={searchQuery}
+        placeholder="Search your recipes"
+      />
 
       <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
         {recipes?.map(
@@ -102,7 +151,9 @@ export default async function MyRecipesPage() {
         {recipes?.length ===
           0 && (
           <div className="border border-zinc-800 bg-zinc-900 rounded-xl p-6 text-zinc-400">
-            No recipes yet.
+            {searchQuery
+              ? `No recipes found for "${searchQuery}".`
+              : "No recipes yet."}
           </div>
         )}
       </div>
