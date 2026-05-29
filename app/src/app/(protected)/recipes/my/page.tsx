@@ -2,9 +2,13 @@ import Link from "next/link"
 
 import { createClient } from "@/utils/supabase/server"
 
-export default async function RecipesPage() {
+export default async function MyRecipesPage() {
   const supabase =
     await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   const {
     data: recipes,
@@ -12,23 +16,19 @@ export default async function RecipesPage() {
   } = await supabase
     .from("recipes")
     .select(`
-    id,
-    slug,
-    title,
-    description,
-    visibility,
-    hero_image_url,
-    created_at
-  `)
-    .eq(
-      "visibility",
-      "public"
-    )
+      id,
+      slug,
+      title,
+      description,
+      visibility,
+      hero_image_url,
+      created_at
+    `)
+    .eq("user_id", user!.id)
     .is("deleted_at", null)
     .order("created_at", {
       ascending: false,
     })
-
 
   if (error) {
     return (
@@ -42,12 +42,11 @@ export default async function RecipesPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-5xl font-bold">
-          Recipes
+          My Recipes
         </h1>
 
         <p className="text-zinc-400 mt-3">
-          Structured and AI-normalized
-          recipe data.
+          Recipes you created.
         </p>
       </div>
 
@@ -76,14 +75,15 @@ export default async function RecipesPage() {
                   </h2>
 
                   <span
-                    className={`text-xs px-2 py-1 rounded-full border ${recipe.visibility ===
+                    className={`text-xs px-2 py-1 rounded-full border ${
+                      recipe.visibility ===
                       "public"
-                      ? "border-green-700 text-green-400 bg-green-950"
-                      : "border-zinc-700 text-zinc-400 bg-zinc-950"
-                      }`}
+                        ? "border-green-700 text-green-400 bg-green-950"
+                        : "border-zinc-700 text-zinc-400 bg-zinc-950"
+                    }`}
                   >
                     {recipe.visibility ===
-                      "public"
+                    "public"
                       ? "Public"
                       : "Private"}
                   </span>
@@ -101,10 +101,10 @@ export default async function RecipesPage() {
 
         {recipes?.length ===
           0 && (
-            <div className="border border-zinc-800 bg-zinc-900 rounded-xl p-6 text-zinc-400">
-              No recipes yet.
-            </div>
-          )}
+          <div className="border border-zinc-800 bg-zinc-900 rounded-xl p-6 text-zinc-400">
+            No recipes yet.
+          </div>
+        )}
       </div>
     </div>
   )

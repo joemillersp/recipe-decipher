@@ -2,6 +2,25 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import {
+    DndContext,
+    PointerSensor,
+    TouchSensor,
+    KeyboardSensor,
+    closestCenter,
+    useSensor,
+    useSensors,
+} from "@dnd-kit/core"
+
+import {
+    SortableContext,
+    useSortable,
+    verticalListSortingStrategy,
+    arrayMove,
+} from "@dnd-kit/sortable"
+
+import { CSS } from "@dnd-kit/utilities"
+
 
 type Provenance =
     | "verbatim"
@@ -19,7 +38,7 @@ type ParsedField = {
 }
 
 type ParsedIngredient = {
-    id?: string
+    id: string
     amount: string
     unit: string
     ingredient: string
@@ -27,7 +46,7 @@ type ParsedIngredient = {
 }
 
 type ParsedInstruction = {
-    id?: string
+    id: string
     value: string
     provenance: Provenance
 }
@@ -101,6 +120,50 @@ function ProvenanceBadge({
     )
 }
 
+function SortableWrapper({
+    id,
+    children,
+}: {
+    id: string
+    children: React.ReactNode
+}) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+    } = useSortable({
+        id,
+    })
+
+    const style = {
+        transform:
+            CSS.Transform.toString(
+                transform
+            ),
+        transition,
+    }
+
+    return (
+        <div
+            ref={setNodeRef}
+            style={style}
+            className="relative"
+        >
+            <div
+                {...attributes}
+                {...listeners}
+                className="absolute top-4 right-4 cursor-grab text-zinc-500 select-none"
+            >
+                ⋮⋮
+            </div>
+
+            {children}
+        </div>
+    )
+}
+
 export default function RecipeEditor({
     mode,
     initialRecipe,
@@ -129,6 +192,12 @@ export default function RecipeEditor({
 
     const [generatingImage, setGeneratingImage] =
         useState(false)
+
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(TouchSensor),
+        useSensor(KeyboardSensor)
+    )
 
     async function generateImage() {
         setGeneratingImage(true)
@@ -364,6 +433,80 @@ export default function RecipeEditor({
             ...result,
 
             instructions: updated,
+        })
+    }
+
+    function handleIngredientDragEnd(
+        event: any
+    ) {
+        const {
+            active,
+            over,
+        } = event
+
+        if (
+            !over ||
+            active.id === over.id
+        ) {
+            return
+        }
+
+        const oldIndex =
+            result.ingredients.findIndex(
+                (i) =>
+                    i.id === active.id
+            )
+
+        const newIndex =
+            result.ingredients.findIndex(
+                (i) =>
+                    i.id === over.id
+            )
+
+        setResult({
+            ...result,
+            ingredients: arrayMove(
+                result.ingredients,
+                oldIndex,
+                newIndex
+            ),
+        })
+    }
+
+    function handleInstructionDragEnd(
+        event: any
+    ) {
+        const {
+            active,
+            over,
+        } = event
+
+        if (
+            !over ||
+            active.id === over.id
+        ) {
+            return
+        }
+
+        const oldIndex =
+            result.instructions.findIndex(
+                (i) =>
+                    i.id === active.id
+            )
+
+        const newIndex =
+            result.instructions.findIndex(
+                (i) =>
+                    i.id === over.id
+            )
+
+        setResult({
+            ...result,
+            instructions: arrayMove(
+                result.instructions,
+                oldIndex,
+                newIndex
+            ),
         })
     }
 
@@ -650,106 +793,240 @@ export default function RecipeEditor({
             </div>
 
             <div className="border border-zinc-800 bg-zinc-900 rounded-2xl p-6 space-y-4">
-                <h2 className="text-3xl font-semibold">
-                    Ingredients
-                </h2>
+                <div className="flex items-center justify-between">
+                    <h2 className="text-3xl font-semibold">
+                        Ingredients
+                    </h2>
 
-                {result.ingredients.map(
-                    (
-                        ingredient,
-                        idx
-                    ) => (
-                        <div
-                            key={idx}
-                            className="space-y-2"
-                        >
-                            <ProvenanceBadge
-                                provenance={
-                                    ingredient.provenance
-                                }
-                            />
+                    <button
+                        onClick={() =>
+                            setResult({
+                                ...result,
 
-                            <div className="grid md:grid-cols-3 gap-3">
-                                <input
-                                    value={
-                                        ingredient.amount
-                                    }
-                                    onChange={(e) =>
-                                        updateIngredient(
-                                            idx,
-                                            "amount",
-                                            e.target.value
-                                        )
-                                    }
-                                    placeholder="Amount"
-                                    className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3"
-                                />
+                                ingredients: [
+                                    ...result.ingredients,
+                                    {
+                                        id: crypto.randomUUID(),
+                                        amount: "",
+                                        unit: "",
+                                        ingredient: "",
+                                        provenance: "altered",
+                                    },
+                                ],
+                            })
+                        }
+                        className="border border-zinc-700 bg-zinc-950 hover:bg-zinc-800 px-4 py-2 rounded-xl"
+                    >
+                        Add Ingredient
+                    </button>
+                </div>
 
-                                <input
-                                    value={
-                                        ingredient.unit
-                                    }
-                                    onChange={(e) =>
-                                        updateIngredient(
-                                            idx,
-                                            "unit",
-                                            e.target.value
-                                        )
-                                    }
-                                    placeholder="Unit"
-                                    className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3"
-                                />
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleIngredientDragEnd}
+                >
+                    <SortableContext
+                        items={result.ingredients.map(
+                            (i) => i.id!
+                        )}
+                        strategy={
+                            verticalListSortingStrategy
+                        }
+                    >
+                        {result.ingredients.map(
+                            (
+                                ingredient,
+                                idx
+                            ) => (
+                                <SortableWrapper
+                                    key={ingredient.id}
+                                    id={ingredient.id!}
+                                >
+                                    <div className="space-y-2 border border-zinc-800 rounded-2xl p-4">
+                                        <div className="flex items-center justify-between">
+                                            <ProvenanceBadge
+                                                provenance={
+                                                    ingredient.provenance
+                                                }
+                                            />
 
-                                <input
-                                    value={
-                                        ingredient.ingredient
-                                    }
-                                    onChange={(e) =>
-                                        updateIngredient(
-                                            idx,
-                                            "ingredient",
-                                            e.target.value
-                                        )
-                                    }
-                                    placeholder="Ingredient"
-                                    className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3"
-                                />
-                            </div>
-                        </div>
-                    )
-                )}
+                                            <button
+                                                onClick={() => {
+                                                    setResult({
+                                                        ...result,
+
+                                                        ingredients:
+                                                            result.ingredients.filter(
+                                                                (
+                                                                    _,
+                                                                    i
+                                                                ) =>
+                                                                    i !==
+                                                                    idx
+                                                            ),
+                                                    })
+                                                }}
+                                                className="border border-red-800 bg-red-950 hover:bg-red-900 px-3 py-2 rounded-xl text-red-300"
+                                            >
+                                                Remove
+                                            </button>
+                                        </div>
+
+                                        <div className="grid md:grid-cols-3 gap-3">
+                                            <input
+                                                value={
+                                                    ingredient.amount
+                                                }
+                                                onChange={(e) =>
+                                                    updateIngredient(
+                                                        idx,
+                                                        "amount",
+                                                        e.target
+                                                            .value
+                                                    )
+                                                }
+                                                placeholder="Amount"
+                                                className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3"
+                                            />
+
+                                            <input
+                                                value={
+                                                    ingredient.unit
+                                                }
+                                                onChange={(e) =>
+                                                    updateIngredient(
+                                                        idx,
+                                                        "unit",
+                                                        e.target
+                                                            .value
+                                                    )
+                                                }
+                                                placeholder="Unit"
+                                                className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3"
+                                            />
+
+                                            <input
+                                                value={
+                                                    ingredient.ingredient
+                                                }
+                                                onChange={(e) =>
+                                                    updateIngredient(
+                                                        idx,
+                                                        "ingredient",
+                                                        e.target
+                                                            .value
+                                                    )
+                                                }
+                                                placeholder="Ingredient"
+                                                className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3"
+                                            />
+                                        </div>
+                                    </div>
+                                </SortableWrapper>
+                            )
+                        )}
+                    </SortableContext>
+                </DndContext>
             </div>
 
             <div className="border border-zinc-800 bg-zinc-900 rounded-2xl p-6 space-y-4">
-                <h2 className="text-3xl font-semibold">
-                    Instructions
-                </h2>
+                <div className="flex items-center justify-between">
+                    <h2 className="text-3xl font-semibold">
+                        Instructions
+                    </h2>
 
-                {result.instructions.map(
-                    (step, idx) => (
-                        <div
-                            key={idx}
-                            className="space-y-2"
-                        >
-                            <ProvenanceBadge
-                                provenance={
-                                    step.provenance
-                                }
-                            />
+                    <button
+                        onClick={() =>
+                            setResult({
+                                ...result,
 
-                            <textarea
-                                value={step.value}
-                                onChange={(e) =>
-                                    updateInstruction(
-                                        idx,
-                                        e.target.value
-                                    )
-                                }
-                                className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 h-28"
-                            />
-                        </div>
-                    )
-                )}
+                                instructions: [
+                                    ...result.instructions,
+                                    {
+                                        id: crypto.randomUUID(),
+                                        value: "",
+                                        provenance: "altered",
+                                    },
+                                ],
+                            })
+                        }
+                        className="border border-zinc-700 bg-zinc-950 hover:bg-zinc-800 px-4 py-2 rounded-xl"
+                    >
+                        Add Step
+                    </button>
+                </div>
+
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={
+                        handleInstructionDragEnd
+                    }
+                >
+                    <SortableContext
+                        items={result.instructions.map(
+                            (i) => i.id!
+                        )}
+                        strategy={
+                            verticalListSortingStrategy
+                        }
+                    >
+                        {result.instructions.map(
+                            (
+                                step,
+                                idx
+                            ) => (
+                                <SortableWrapper
+                                    key={step.id}
+                                    id={step.id!}
+                                >
+                                    <div className="space-y-2 border border-zinc-800 rounded-2xl p-4">
+                                        <div className="flex items-center justify-between">
+                                            <ProvenanceBadge
+                                                provenance={
+                                                    step.provenance
+                                                }
+                                            />
+
+                                            <button
+                                                onClick={() => {
+                                                    setResult({
+                                                        ...result,
+
+                                                        instructions:
+                                                            result.instructions.filter(
+                                                                (
+                                                                    _,
+                                                                    i
+                                                                ) =>
+                                                                    i !==
+                                                                    idx
+                                                            ),
+                                                    })
+                                                }}
+                                                className="border border-red-800 bg-red-950 hover:bg-red-900 px-3 py-2 rounded-xl text-red-300"
+                                            >
+                                                Remove
+                                            </button>
+                                        </div>
+
+                                        <textarea
+                                            value={step.value}
+                                            onChange={(e) =>
+                                                updateInstruction(
+                                                    idx,
+                                                    e.target.value
+                                                )
+                                            }
+                                            className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 h-28"
+                                        />
+                                    </div>
+                                </SortableWrapper>
+                            )
+                        )}
+                    </SortableContext>
+                </DndContext>
             </div>
 
             <button

@@ -40,7 +40,29 @@ export default function ParsePage() {
 
       const data = await res.json()
 
-      setResult(data)
+      setResult({
+        ...data,
+
+        ingredients:
+          data.ingredients?.map(
+            (ingredient: any) => ({
+              ...ingredient,
+
+              id:
+                crypto.randomUUID(),
+            })
+          ) ?? [],
+
+        instructions:
+          data.instructions?.map(
+            (instruction: any) => ({
+              ...instruction,
+
+              id:
+                crypto.randomUUID(),
+            })
+          ) ?? [],
+      })
     } finally {
       setLoading(false)
     }

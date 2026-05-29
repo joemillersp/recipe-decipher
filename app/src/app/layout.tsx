@@ -38,20 +38,6 @@ export default async function RootLayout({
             </Link>
 
             <nav className="flex items-center gap-6 text-sm font-medium">
-              <Link
-                href="/"
-                className="text-zinc-300 hover:text-white transition-colors"
-              >
-                Home
-              </Link>
-
-              <Link
-                href="/about"
-                className="text-zinc-300 hover:text-white transition-colors"
-              >
-                About
-              </Link>
-
               {user && (
                 <>
                   <Link
@@ -59,6 +45,13 @@ export default async function RootLayout({
                     className="text-zinc-300 hover:text-white transition-colors"
                   >
                     Recipes
+                  </Link>
+
+                  <Link
+                    href="/recipes/my"
+                    className="text-zinc-300 hover:text-white transition-colors"
+                  >
+                    My Recipes
                   </Link>
 
                   <Link
@@ -78,7 +71,9 @@ export default async function RootLayout({
                   Login
                 </Link>
               ) : (
-                <UserMenu email={user.email ?? ""} />
+                <UserMenu
+                  email={user.email ?? ""}
+                />
               )}
             </nav>
           </div>

@@ -18,8 +18,6 @@ export default function LoginPage() {
         },
       })
 
-    console.log(error)
-
     if (!error) {
       alert("Check your email")
     }

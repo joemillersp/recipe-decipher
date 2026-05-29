@@ -35,11 +35,6 @@ export async function POST(req: Request) {
     .is("deleted_at", null)
     .single()
 
-  console.log(
-    "existing recipe",
-    existingRecipe
-  )
-
   if (
     recipeLookupError ||
     !existingRecipe
@@ -261,10 +256,17 @@ export async function POST(req: Request) {
     const ingredient =
       recipe.ingredients[index]
 
-    if (ingredient.id) {
+    const ingredientExists =
+      existingIngredients?.some(
+        (
+          existingIngredient
+        ) =>
+          existingIngredient.id ===
+          ingredient.id
+      )
+
+    if (ingredientExists) {
       const {
-        data:
-        updatedIngredient,
         error:
         ingredientUpdateError,
       } = await supabase
@@ -290,16 +292,6 @@ export async function POST(req: Request) {
           "id",
           ingredient.id
         )
-        .eq(
-          "recipe_id",
-          existingRecipe.id
-        )
-        .select()
-
-      console.log(
-        "ingredient update result",
-        updatedIngredient
-      )
 
       if (
         ingredientUpdateError
@@ -323,6 +315,9 @@ export async function POST(req: Request) {
           "recipe_ingredients"
         )
         .insert({
+          id:
+            ingredient.id,
+
           recipe_id:
             existingRecipe.id,
 
@@ -446,10 +441,17 @@ export async function POST(req: Request) {
     const instruction =
       recipe.instructions[index]
 
-    if (instruction.id) {
+    const instructionExists =
+      existingInstructions?.some(
+        (
+          existingInstruction
+        ) =>
+          existingInstruction.id ===
+          instruction.id
+      )
+
+    if (instructionExists) {
       const {
-        data:
-        updatedInstruction,
         error:
         instructionUpdateError,
       } = await supabase
@@ -470,16 +472,6 @@ export async function POST(req: Request) {
           "id",
           instruction.id
         )
-        .eq(
-          "recipe_id",
-          existingRecipe.id
-        )
-        .select()
-
-      console.log(
-        "instruction update result",
-        updatedInstruction
-      )
 
       if (
         instructionUpdateError
@@ -503,6 +495,9 @@ export async function POST(req: Request) {
           "recipe_instructions"
         )
         .insert({
+          id:
+            instruction.id,
+
           recipe_id:
             existingRecipe.id,
 

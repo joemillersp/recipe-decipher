@@ -52,12 +52,6 @@ export default function UserMenu({
           </div>
 
           <div className="p-2">
-            <Link
-              href="/recipes"
-              className="block px-3 py-2 rounded-lg hover:bg-zinc-800 transition-colors"
-            >
-              My Recipes
-            </Link>
 
             <Link
               href="/settings"
@@ -72,7 +66,7 @@ export default function UserMenu({
               href="/logout"
               className="block px-3 py-2 rounded-lg hover:bg-red-950 hover:text-red-200 transition-colors"
             >Logout</a>
-            
+
           </div>
         </div>
       )}
