@@ -13,10 +13,17 @@ export default async function RootLayout({
 }>) {
   const user = await getUser()
 
+  const displayName =
+    typeof user?.user_metadata
+      ?.display_name === "string"
+      ? user.user_metadata
+        .display_name
+      : undefined
+
   return (
     <html lang="en">
       <body className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col">
-        <header className="border-b border-zinc-800 bg-zinc-950">
+        <header className="sticky top-0 z-50 border-b border-zinc-800 bg-zinc-950/95 backdrop-blur">
           <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
             <Link
               href="/"
@@ -64,15 +71,25 @@ export default async function RootLayout({
               )}
 
               {!user ? (
-                <Link
-                  href="/login"
-                  className="border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 px-4 py-2 rounded-xl transition-colors"
-                >
-                  Login
-                </Link>
+                <>
+                  <Link
+                    href="/create-account"
+                    className="text-zinc-300 hover:text-white transition-colors"
+                  >
+                    Create Account
+                  </Link>
+
+                  <Link
+                    href="/login"
+                    className="border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 px-4 py-2 rounded-xl transition-colors"
+                  >
+                    Login
+                  </Link>
+                </>
               ) : (
                 <UserMenu
                   email={user.email ?? ""}
+                  displayName={displayName}
                 />
               )}
             </nav>

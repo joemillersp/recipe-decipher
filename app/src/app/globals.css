@@ -28,3 +28,33 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+:where(
+  a[href],
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  summary,
+  select,
+  label[for],
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  input[type="checkbox"],
+  input[type="radio"]
+) {
+  cursor: pointer;
+}
+
+:where(
+  button:disabled,
+  [aria-disabled="true"]
+) {
+  cursor: not-allowed;
+}
+
+:where(
+  [draggable="true"],
+  [aria-roledescription="sortable"]
+) {
+  cursor: grab;
+}

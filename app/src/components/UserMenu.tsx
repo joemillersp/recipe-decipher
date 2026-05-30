@@ -2,30 +2,33 @@
 
 import Link from "next/link"
 import { useState } from "react"
-import { usePathname } from "next/navigation"
-import { useEffect } from "react"
 
 export default function UserMenu({
   email,
+  displayName,
 }: {
   email: string
+  displayName?: string
 }) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] =
+    useState(false)
 
-  const pathname = usePathname()
+  const label =
+    displayName || email
 
-  useEffect(() => {
-    setOpen(false)
-  }, [pathname])
+  const initial =
+    label?.[0]?.toUpperCase()
 
   return (
     <div className="relative">
       <button
-        onClick={() => setOpen(!open)}
+        onClick={() =>
+          setOpen(!open)
+        }
         className="border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 px-4 py-2 rounded-xl transition-colors flex items-center gap-3"
       >
         <div className="w-8 h-8 rounded-full bg-zinc-700 flex items-center justify-center text-xs font-bold">
-          {email?.[0]?.toUpperCase()}
+          {initial}
         </div>
 
         <div className="text-left">
@@ -34,7 +37,7 @@ export default function UserMenu({
           </div>
 
           <div className="max-w-[160px] truncate">
-            {email}
+            {label}
           </div>
         </div>
       </button>
@@ -47,14 +50,22 @@ export default function UserMenu({
             </div>
 
             <div className="truncate text-sm mt-1">
-              {email}
+              {label}
             </div>
+
+            {displayName && (
+              <div className="truncate text-xs text-zinc-500 mt-1">
+                {email}
+              </div>
+            )}
           </div>
 
           <div className="p-2">
-
             <Link
               href="/settings"
+              onClick={() =>
+                setOpen(false)
+              }
               className="block px-3 py-2 rounded-lg hover:bg-zinc-800 transition-colors"
             >
               Settings
@@ -64,9 +75,13 @@ export default function UserMenu({
           <div className="border-t border-zinc-800 p-2">
             <a
               href="/logout"
+              onClick={() =>
+                setOpen(false)
+              }
               className="block px-3 py-2 rounded-lg hover:bg-red-950 hover:text-red-200 transition-colors"
-            >Logout</a>
-
+            >
+              Logout
+            </a>
           </div>
         </div>
       )}

@@ -1,12 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import {
+    useEffect,
+    useRef,
+    useState,
+} from "react"
 import { useRouter } from "next/navigation"
 import {
     DndContext,
     PointerSensor,
     TouchSensor,
     KeyboardSensor,
+    DragEndEvent,
     closestCenter,
     useSensor,
     useSensors,
@@ -120,6 +125,42 @@ function ProvenanceBadge({
     )
 }
 
+function AutoResizeTextarea({
+    value,
+    onChange,
+    className,
+}: {
+    value: string
+    onChange: React.ChangeEventHandler<HTMLTextAreaElement>
+    className: string
+}) {
+    const textareaRef =
+        useRef<HTMLTextAreaElement | null>(
+            null
+        )
+
+    useEffect(() => {
+        const textarea =
+            textareaRef.current
+
+        if (!textarea) {
+            return
+        }
+
+        textarea.style.height = "auto"
+        textarea.style.height = `${textarea.scrollHeight}px`
+    }, [value])
+
+    return (
+        <textarea
+            ref={textareaRef}
+            value={value}
+            onChange={onChange}
+            className={className}
+        />
+    )
+}
+
 function SortableWrapper({
     id,
     children,
@@ -149,15 +190,24 @@ function SortableWrapper({
         <div
             ref={setNodeRef}
             style={style}
-            className="relative"
+            className="grid grid-cols-[2.25rem_minmax(0,1fr)] gap-3 items-stretch"
         >
-            <div
+            <button
+                type="button"
+                aria-label="Drag to reorder"
                 {...attributes}
                 {...listeners}
-                className="absolute top-4 right-4 cursor-grab text-zinc-500 select-none"
+                className="h-full min-h-12 rounded-lg border border-zinc-800 bg-zinc-950 text-zinc-500 cursor-grab active:cursor-grabbing touch-none flex items-center justify-center transition-colors hover:border-zinc-700 hover:text-zinc-300"
             >
-                ⋮⋮
-            </div>
+                <span className="grid grid-cols-2 gap-1">
+                    <span className="h-1 w-1 rounded-full bg-current" />
+                    <span className="h-1 w-1 rounded-full bg-current" />
+                    <span className="h-1 w-1 rounded-full bg-current" />
+                    <span className="h-1 w-1 rounded-full bg-current" />
+                    <span className="h-1 w-1 rounded-full bg-current" />
+                    <span className="h-1 w-1 rounded-full bg-current" />
+                </span>
+            </button>
 
             {children}
         </div>
@@ -436,17 +486,49 @@ export default function RecipeEditor({
         })
     }
 
-    function handleIngredientDragEnd(
-        event: any
-    ) {
+    function addIngredient() {
+        setResult({
+            ...result,
+
+            ingredients: [
+                ...result.ingredients,
+                {
+                    id: crypto.randomUUID(),
+                    amount: "",
+                    unit: "",
+                    ingredient: "",
+                    provenance: "altered",
+                },
+            ],
+        })
+    }
+
+    function addInstruction() {
+        setResult({
+            ...result,
+
+            instructions: [
+                ...result.instructions,
+                {
+                    id: crypto.randomUUID(),
+                    value: "",
+                    provenance: "altered",
+                },
+            ],
+        })
+    }
+
+    function handleIngredientDragEnd({
+        active,
+        over,
+    }: DragEndEvent) {
         const {
-            active,
-            over,
-        } = event
+            id: activeId,
+        } = active
 
         if (
             !over ||
-            active.id === over.id
+            activeId === over.id
         ) {
             return
         }
@@ -454,7 +536,7 @@ export default function RecipeEditor({
         const oldIndex =
             result.ingredients.findIndex(
                 (i) =>
-                    i.id === active.id
+                    i.id === activeId
             )
 
         const newIndex =
@@ -473,17 +555,17 @@ export default function RecipeEditor({
         })
     }
 
-    function handleInstructionDragEnd(
-        event: any
-    ) {
+    function handleInstructionDragEnd({
+        active,
+        over,
+    }: DragEndEvent) {
         const {
-            active,
-            over,
-        } = event
+            id: activeId,
+        } = active
 
         if (
             !over ||
-            active.id === over.id
+            activeId === over.id
         ) {
             return
         }
@@ -491,7 +573,7 @@ export default function RecipeEditor({
         const oldIndex =
             result.instructions.findIndex(
                 (i) =>
-                    i.id === active.id
+                    i.id === activeId
             )
 
         const newIndex =
@@ -510,12 +592,20 @@ export default function RecipeEditor({
         })
     }
 
+    const saveLabel = saving
+        ? mode === "edit"
+            ? "Updating..."
+            : "Saving..."
+        : mode === "edit"
+            ? "Update Recipe"
+            : "Save Recipe"
+
     return (
         <div className="space-y-8">
-            <div className="border border-zinc-800 bg-zinc-900 rounded-2xl p-6 space-y-6">
-                <div className="flex items-center justify-between">
+            <div className="border border-zinc-800 bg-zinc-900 rounded-xl p-5 space-y-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h2 className="text-3xl font-semibold">
+                        <h2 className="text-2xl font-semibold">
                             Recipe Details
                         </h2>
 
@@ -538,7 +628,7 @@ export default function RecipeEditor({
                                         .value as Visibility,
                             })
                         }
-                        className="bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-3"
+                        className="bg-zinc-950 border border-zinc-700 rounded-lg px-4 py-3"
                     >
                         <option value="private">
                             Private
@@ -574,7 +664,7 @@ export default function RecipeEditor({
                                 e.target.value
                             )
                         }
-                        className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3"
+                        className="w-full bg-zinc-950 border border-zinc-700 rounded-lg p-3"
                     />
                 </div>
 
@@ -603,7 +693,7 @@ export default function RecipeEditor({
                                 e.target.value
                             )
                         }
-                        className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 h-24"
+                        className="w-full bg-zinc-950 border border-zinc-700 rounded-lg p-3 h-24"
                     />
                 </div>
 
@@ -633,7 +723,7 @@ export default function RecipeEditor({
                                     e.target.value
                                 )
                             }
-                            className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3"
+                            className="w-full bg-zinc-950 border border-zinc-700 rounded-lg p-3"
                         />
                     </div>
 
@@ -662,7 +752,7 @@ export default function RecipeEditor({
                                     e.target.value
                                 )
                             }
-                            className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3"
+                            className="w-full bg-zinc-950 border border-zinc-700 rounded-lg p-3"
                         />
                     </div>
 
@@ -691,15 +781,15 @@ export default function RecipeEditor({
                                     e.target.value
                                 )
                             }
-                            className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3"
+                            className="w-full bg-zinc-950 border border-zinc-700 rounded-lg p-3"
                         />
                     </div>
                 </div>
             </div>
 
-            <div className="border border-zinc-800 bg-zinc-900 rounded-2xl p-6 space-y-6">
+            <div className="border border-zinc-800 bg-zinc-900 rounded-xl p-5 space-y-5">
                 <div>
-                    <h2 className="text-3xl font-semibold">
+                    <h2 className="text-2xl font-semibold">
                         Recipe Image
                     </h2>
 
@@ -714,7 +804,7 @@ export default function RecipeEditor({
                         onClick={() =>
                             setImageMode("ai")
                         }
-                        className={`px-4 py-2 rounded-xl border transition-colors ${imageMode === "ai"
+                        className={`px-4 py-2 rounded-lg border transition-colors ${imageMode === "ai"
                             ? "border-white bg-white text-black"
                             : "border-zinc-700 bg-zinc-950"
                             }`}
@@ -728,7 +818,7 @@ export default function RecipeEditor({
                                 "upload"
                             )
                         }
-                        className={`px-4 py-2 rounded-xl border transition-colors ${imageMode ===
+                        className={`px-4 py-2 rounded-lg border transition-colors ${imageMode ===
                             "upload"
                             ? "border-white bg-white text-black"
                             : "border-zinc-700 bg-zinc-950"
@@ -759,7 +849,7 @@ export default function RecipeEditor({
                                         imageFile
                                     )}
                                     alt="Preview"
-                                    className="rounded-2xl border border-zinc-800 max-w-xl"
+                                    className="rounded-lg border border-zinc-800 max-w-xl"
                                 />
                             )}
                         </div>
@@ -774,7 +864,7 @@ export default function RecipeEditor({
                             disabled={
                                 generatingImage
                             }
-                            className="border border-zinc-700 bg-zinc-950 hover:bg-zinc-800 px-5 py-3 rounded-xl transition-colors disabled:opacity-50"
+                            className="border border-zinc-700 bg-zinc-950 hover:bg-zinc-800 px-5 py-3 rounded-lg transition-colors disabled:opacity-50"
                         >
                             {generatingImage
                                 ? "Generating..."
@@ -785,43 +875,22 @@ export default function RecipeEditor({
                             <img
                                 src={generatedImage}
                                 alt="Generated recipe"
-                                className="rounded-2xl border border-zinc-800 max-w-xl"
+                                className="rounded-lg border border-zinc-800 max-w-xl"
                             />
                         )}
                     </div>
                 )}
             </div>
 
-            <div className="border border-zinc-800 bg-zinc-900 rounded-2xl p-6 space-y-4">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-3xl font-semibold">
+            <div className="border border-zinc-800 bg-zinc-900 rounded-xl p-5 space-y-3">
+                <div>
+                    <h2 className="text-2xl font-semibold">
                         Ingredients
                     </h2>
-
-                    <button
-                        onClick={() =>
-                            setResult({
-                                ...result,
-
-                                ingredients: [
-                                    ...result.ingredients,
-                                    {
-                                        id: crypto.randomUUID(),
-                                        amount: "",
-                                        unit: "",
-                                        ingredient: "",
-                                        provenance: "altered",
-                                    },
-                                ],
-                            })
-                        }
-                        className="border border-zinc-700 bg-zinc-950 hover:bg-zinc-800 px-4 py-2 rounded-xl"
-                    >
-                        Add Ingredient
-                    </button>
                 </div>
 
                 <DndContext
+                    id="recipe-ingredients"
                     sensors={sensors}
                     collisionDetection={closestCenter}
                     onDragEnd={handleIngredientDragEnd}
@@ -843,37 +912,8 @@ export default function RecipeEditor({
                                     key={ingredient.id}
                                     id={ingredient.id!}
                                 >
-                                    <div className="space-y-2 border border-zinc-800 rounded-2xl p-4">
-                                        <div className="flex items-center justify-between">
-                                            <ProvenanceBadge
-                                                provenance={
-                                                    ingredient.provenance
-                                                }
-                                            />
-
-                                            <button
-                                                onClick={() => {
-                                                    setResult({
-                                                        ...result,
-
-                                                        ingredients:
-                                                            result.ingredients.filter(
-                                                                (
-                                                                    _,
-                                                                    i
-                                                                ) =>
-                                                                    i !==
-                                                                    idx
-                                                            ),
-                                                    })
-                                                }}
-                                                className="border border-red-800 bg-red-950 hover:bg-red-900 px-3 py-2 rounded-xl text-red-300"
-                                            >
-                                                Remove
-                                            </button>
-                                        </div>
-
-                                        <div className="grid md:grid-cols-3 gap-3">
+                                    <div className="grid gap-3 border border-zinc-800 rounded-lg p-3 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-center">
+                                        <div className="grid gap-3 sm:grid-cols-[7rem_7rem_minmax(0,1fr)]">
                                             <input
                                                 value={
                                                     ingredient.amount
@@ -887,7 +927,7 @@ export default function RecipeEditor({
                                                     )
                                                 }
                                                 placeholder="Amount"
-                                                className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3"
+                                                className="w-full bg-zinc-950 border border-zinc-700 rounded-lg p-3"
                                             />
 
                                             <input
@@ -903,7 +943,7 @@ export default function RecipeEditor({
                                                     )
                                                 }
                                                 placeholder="Unit"
-                                                className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3"
+                                                className="w-full bg-zinc-950 border border-zinc-700 rounded-lg p-3"
                                             />
 
                                             <input
@@ -919,45 +959,60 @@ export default function RecipeEditor({
                                                     )
                                                 }
                                                 placeholder="Ingredient"
-                                                className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3"
+                                                className="w-full bg-zinc-950 border border-zinc-700 rounded-lg p-3"
                                             />
                                         </div>
+
+                                        <ProvenanceBadge
+                                            provenance={
+                                                ingredient.provenance
+                                            }
+                                        />
+
+                                        <button
+                                            onClick={() => {
+                                                setResult({
+                                                    ...result,
+
+                                                    ingredients:
+                                                        result.ingredients.filter(
+                                                            (
+                                                                _,
+                                                                i
+                                                            ) =>
+                                                                i !==
+                                                                idx
+                                                        ),
+                                                })
+                                            }}
+                                            className="border border-red-800 bg-red-950 hover:bg-red-900 px-3 py-2 rounded-lg text-sm text-red-300"
+                                        >
+                                            Remove
+                                        </button>
                                     </div>
                                 </SortableWrapper>
                             )
                         )}
                     </SortableContext>
                 </DndContext>
+
+                <button
+                    onClick={addIngredient}
+                    className="border border-zinc-700 bg-zinc-950 hover:bg-zinc-800 px-4 py-2 rounded-lg"
+                >
+                    Add Ingredient
+                </button>
             </div>
 
-            <div className="border border-zinc-800 bg-zinc-900 rounded-2xl p-6 space-y-4">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-3xl font-semibold">
+            <div className="border border-zinc-800 bg-zinc-900 rounded-xl p-5 space-y-3">
+                <div>
+                    <h2 className="text-2xl font-semibold">
                         Instructions
                     </h2>
-
-                    <button
-                        onClick={() =>
-                            setResult({
-                                ...result,
-
-                                instructions: [
-                                    ...result.instructions,
-                                    {
-                                        id: crypto.randomUUID(),
-                                        value: "",
-                                        provenance: "altered",
-                                    },
-                                ],
-                            })
-                        }
-                        className="border border-zinc-700 bg-zinc-950 hover:bg-zinc-800 px-4 py-2 rounded-xl"
-                    >
-                        Add Step
-                    </button>
                 </div>
 
                 <DndContext
+                    id="recipe-instructions"
                     sensors={sensors}
                     collisionDetection={closestCenter}
                     onDragEnd={
@@ -981,37 +1036,8 @@ export default function RecipeEditor({
                                     key={step.id}
                                     id={step.id!}
                                 >
-                                    <div className="space-y-2 border border-zinc-800 rounded-2xl p-4">
-                                        <div className="flex items-center justify-between">
-                                            <ProvenanceBadge
-                                                provenance={
-                                                    step.provenance
-                                                }
-                                            />
-
-                                            <button
-                                                onClick={() => {
-                                                    setResult({
-                                                        ...result,
-
-                                                        instructions:
-                                                            result.instructions.filter(
-                                                                (
-                                                                    _,
-                                                                    i
-                                                                ) =>
-                                                                    i !==
-                                                                    idx
-                                                            ),
-                                                    })
-                                                }}
-                                                className="border border-red-800 bg-red-950 hover:bg-red-900 px-3 py-2 rounded-xl text-red-300"
-                                            >
-                                                Remove
-                                            </button>
-                                        </div>
-
-                                        <textarea
+                                    <div className="grid gap-3 border border-zinc-800 rounded-lg p-3 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-start">
+                                        <AutoResizeTextarea
                                             value={step.value}
                                             onChange={(e) =>
                                                 updateInstruction(
@@ -1019,29 +1045,62 @@ export default function RecipeEditor({
                                                     e.target.value
                                                 )
                                             }
-                                            className="w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 h-28"
+                                            className="w-full min-h-24 overflow-hidden resize-none bg-zinc-950 border border-zinc-700 rounded-lg p-3"
                                         />
+
+                                        <ProvenanceBadge
+                                            provenance={
+                                                step.provenance
+                                            }
+                                        />
+
+                                        <button
+                                            onClick={() => {
+                                                setResult({
+                                                    ...result,
+
+                                                    instructions:
+                                                        result.instructions.filter(
+                                                            (
+                                                                _,
+                                                                i
+                                                            ) =>
+                                                                i !==
+                                                                idx
+                                                        ),
+                                                })
+                                            }}
+                                            className="border border-red-800 bg-red-950 hover:bg-red-900 px-3 py-2 rounded-lg text-sm text-red-300"
+                                        >
+                                            Remove
+                                        </button>
                                     </div>
                                 </SortableWrapper>
                             )
                         )}
                     </SortableContext>
                 </DndContext>
+
+                <button
+                    onClick={addInstruction}
+                    className="border border-zinc-700 bg-zinc-950 hover:bg-zinc-800 px-4 py-2 rounded-lg"
+                >
+                    Add Step
+                </button>
             </div>
 
-            <button
-                onClick={saveRecipe}
-                disabled={saving}
-                className="border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 px-6 py-3 rounded-xl transition-colors disabled:opacity-50"
-            >
-                {saving
-                    ? mode === "edit"
-                        ? "Updating..."
-                        : "Saving..."
-                    : mode === "edit"
-                        ? "Update Recipe"
-                        : "Save Recipe"}
-            </button>
+            <div className="sticky bottom-4 z-40">
+                <div className="flex justify-end">
+                    <button
+                        type="button"
+                        onClick={saveRecipe}
+                        disabled={saving}
+                        className="w-full sm:w-auto border border-emerald-500 bg-emerald-500 hover:bg-emerald-400 px-6 py-3 rounded-lg font-semibold text-zinc-950 shadow-lg shadow-black/30 transition-colors disabled:opacity-50"
+                    >
+                        {saveLabel}
+                    </button>
+                </div>
+            </div>
         </div>
     )
 }

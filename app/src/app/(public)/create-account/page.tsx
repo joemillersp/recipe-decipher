@@ -1,18 +1,23 @@
 "use client"
 
+import Link from "next/link"
 import { useState } from "react"
+
 import { createClient } from "@/utils/supabase/client"
 
-export default function LoginPage() {
+export default function CreateAccountPage() {
   const supabase = createClient()
 
-  const [email, setEmail] = useState("")
+  const [email, setEmail] =
+    useState("")
+
   const [loading, setLoading] =
     useState(false)
+
   const [message, setMessage] =
     useState<string | null>(null)
 
-  async function signIn() {
+  async function createAccount() {
     const trimmedEmail = email.trim()
 
     if (!trimmedEmail) {
@@ -28,7 +33,7 @@ export default function LoginPage() {
         await supabase.auth.signInWithOtp({
           email: trimmedEmail,
           options: {
-            shouldCreateUser: false,
+            shouldCreateUser: true,
             emailRedirectTo:
               `${window.location.origin}/auth/confirm`,
           },
@@ -40,7 +45,7 @@ export default function LoginPage() {
       }
 
       setMessage(
-        "If that account exists, check your email for a magic link."
+        "Check your email to finish creating your account."
       )
     } finally {
       setLoading(false)
@@ -51,11 +56,11 @@ export default function LoginPage() {
     <div className="max-w-md space-y-6">
       <div>
         <h1 className="text-5xl font-bold">
-          Login
+          Create Account
         </h1>
 
         <p className="text-zinc-400 mt-3">
-          Sign in to an existing account with a magic link.
+          Enter your email and we will send a magic link to finish setup.
         </p>
       </div>
 
@@ -71,13 +76,13 @@ export default function LoginPage() {
         />
 
         <button
-          onClick={signIn}
+          onClick={createAccount}
           disabled={loading}
-          className="w-full border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 px-6 py-3 rounded-xl transition-colors disabled:opacity-50"
+          className="w-full border border-emerald-500 bg-emerald-500 hover:bg-emerald-400 px-6 py-3 rounded-xl font-semibold text-zinc-950 transition-colors disabled:opacity-50"
         >
           {loading
             ? "Sending..."
-            : "Send Magic Link"}
+            : "Create Account"}
         </button>
 
         {message && (
@@ -85,6 +90,16 @@ export default function LoginPage() {
             {message}
           </div>
         )}
+      </div>
+
+      <div className="text-sm text-zinc-500">
+        Already have an account?{" "}
+        <Link
+          href="/login"
+          className="text-zinc-300 hover:text-white"
+        >
+          Log in
+        </Link>
       </div>
     </div>
   )
