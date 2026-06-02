@@ -46,7 +46,6 @@ export default async function RecipesPage({
     title,
     description,
     visibility,
-    hero_image_url,
     created_at
   `)
     .eq(
@@ -106,18 +105,8 @@ export default async function RecipesPage({
             <Link
               key={recipe.id}
               href={`/recipes/${recipe.slug}`}
-              className="block border border-zinc-800 bg-zinc-900 rounded-2xl overflow-hidden hover:bg-zinc-800 transition-colors"
+              className="block border border-zinc-800 bg-zinc-900 rounded-2xl hover:bg-zinc-800 transition-colors"
             >
-              {recipe.hero_image_url && (
-                <img
-                  src={
-                    recipe.hero_image_url
-                  }
-                  alt={recipe.title}
-                  className="w-full aspect-[4/3] object-cover border-b border-zinc-800"
-                />
-              )}
-
               <div className="p-5 space-y-3">
                 <div className="flex items-center justify-between gap-3">
                   <h2 className="text-2xl font-semibold">

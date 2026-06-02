@@ -229,72 +229,11 @@ export default function RecipeEditor({
     const [saving, setSaving] =
         useState(false)
 
-    const [imageMode, setImageMode] =
-        useState<"ai" | "upload">(
-            "ai"
-        )
-
-    const [imageFile, setImageFile] =
-        useState<File | null>(null)
-
-    const [generatedImage, setGeneratedImage] =
-        useState<string | null>(null)
-
-    const [generatingImage, setGeneratingImage] =
-        useState(false)
-
     const sensors = useSensors(
         useSensor(PointerSensor),
         useSensor(TouchSensor),
         useSensor(KeyboardSensor)
     )
-
-    async function generateImage() {
-        setGeneratingImage(true)
-
-        try {
-            const res = await fetch(
-                "/api/generate-recipe-image",
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json",
-                    },
-
-                    body: JSON.stringify({
-                        title:
-                            result.title.value,
-
-                        description:
-                            result.description
-                                .value,
-
-                        ingredients:
-                            result.ingredients.map(
-                                (
-                                    ingredient
-                                ) => ({
-                                    ingredient:
-                                        ingredient.ingredient,
-                                })
-                            ),
-                    }),
-                }
-            )
-
-            const data = await res.json()
-
-            if (data.image) {
-                setGeneratedImage(
-                    `data:image/png;base64,${data.image}`
-                )
-            }
-        } finally {
-            setGeneratingImage(false)
-        }
-    }
 
     async function saveRecipe() {
         setSaving(true)
@@ -337,8 +276,6 @@ export default function RecipeEditor({
 
                 servingsProvenance:
                     result.servings.provenance,
-
-                generatedImage,
 
                 ingredients:
                     result.ingredients.map(
@@ -785,101 +722,6 @@ export default function RecipeEditor({
                         />
                     </div>
                 </div>
-            </div>
-
-            <div className="border border-zinc-800 bg-zinc-900 rounded-xl p-5 space-y-5">
-                <div>
-                    <h2 className="text-2xl font-semibold">
-                        Recipe Image
-                    </h2>
-
-                    <p className="text-zinc-400 mt-2">
-                        Upload an image or
-                        generate one with AI.
-                    </p>
-                </div>
-
-                <div className="flex gap-3">
-                    <button
-                        onClick={() =>
-                            setImageMode("ai")
-                        }
-                        className={`px-4 py-2 rounded-lg border transition-colors ${imageMode === "ai"
-                            ? "border-white bg-white text-black"
-                            : "border-zinc-700 bg-zinc-950"
-                            }`}
-                    >
-                        AI Image
-                    </button>
-
-                    <button
-                        onClick={() =>
-                            setImageMode(
-                                "upload"
-                            )
-                        }
-                        className={`px-4 py-2 rounded-lg border transition-colors ${imageMode ===
-                            "upload"
-                            ? "border-white bg-white text-black"
-                            : "border-zinc-700 bg-zinc-950"
-                            }`}
-                    >
-                        Upload
-                    </button>
-                </div>
-
-                {imageMode ===
-                    "upload" && (
-                        <div className="space-y-4">
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) =>
-                                    setImageFile(
-                                        e.target
-                                            .files?.[0] ??
-                                        null
-                                    )
-                                }
-                            />
-
-                            {imageFile && (
-                                <img
-                                    src={URL.createObjectURL(
-                                        imageFile
-                                    )}
-                                    alt="Preview"
-                                    className="rounded-lg border border-zinc-800 max-w-xl"
-                                />
-                            )}
-                        </div>
-                    )}
-
-                {imageMode === "ai" && (
-                    <div className="space-y-4">
-                        <button
-                            onClick={
-                                generateImage
-                            }
-                            disabled={
-                                generatingImage
-                            }
-                            className="border border-zinc-700 bg-zinc-950 hover:bg-zinc-800 px-5 py-3 rounded-lg transition-colors disabled:opacity-50"
-                        >
-                            {generatingImage
-                                ? "Generating..."
-                                : "Generate AI Image"}
-                        </button>
-
-                        {generatedImage && (
-                            <img
-                                src={generatedImage}
-                                alt="Generated recipe"
-                                className="rounded-lg border border-zinc-800 max-w-xl"
-                            />
-                        )}
-                    </div>
-                )}
             </div>
 
             <div className="border border-zinc-800 bg-zinc-900 rounded-xl p-5 space-y-3">

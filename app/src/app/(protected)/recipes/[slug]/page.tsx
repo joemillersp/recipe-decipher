@@ -27,8 +27,7 @@ export default async function RecipePage({
       description,
       prep_time,
       cook_time,
-      servings,
-      hero_image_url
+      servings
     `)
     .eq("slug", slug)
     .is("deleted_at", null)
@@ -79,16 +78,6 @@ export default async function RecipePage({
               {recipe.description}
             </p>
           </div>
-
-          {recipe.hero_image_url && (
-            <img
-              src={
-                recipe.hero_image_url
-              }
-              alt={recipe.title}
-              className="w-full max-w-5xl rounded-3xl border border-zinc-800"
-            />
-          )}
         </div>
 
         <div className="flex gap-4 flex-wrap">

@@ -6,6 +6,36 @@ import RecipeEditor, {
   RecipeEditorResult,
 } from "@/components/RecipeEditor"
 
+type ParsedRecipe = Omit<
+  RecipeEditorResult,
+  "ingredients" | "instructions"
+> & {
+  ingredients: Array<
+    Omit<
+      RecipeEditorResult["ingredients"][number],
+      "id"
+    >
+  >
+  instructions: Array<
+    Omit<
+      RecipeEditorResult["instructions"][number],
+      "id"
+    >
+  >
+}
+
+type ParseResponse =
+  | {
+    ok: true
+    recipe: ParsedRecipe
+  }
+  | {
+    ok: false
+    error?: {
+      message?: string
+    }
+  }
+
 export default function ParsePage() {
   const [recipe, setRecipe] =
     useState("")
@@ -18,8 +48,13 @@ export default function ParsePage() {
   const [loading, setLoading] =
     useState(false)
 
+  const [parseError, setParseError] =
+    useState<string | null>(null)
+
   async function parseRecipe() {
     setLoading(true)
+    setParseError(null)
+    setResult(null)
 
     try {
       const res = await fetch(
@@ -38,14 +73,26 @@ export default function ParsePage() {
         }
       )
 
-      const data = await res.json()
+      const data =
+        await res.json() as ParseResponse
+
+      if (!res.ok || !data.ok) {
+        setParseError(
+          !data.ok
+            ? data.error?.message ??
+            "That does not look like a recipe. Try pasting recipe text with ingredients and instructions."
+            : "Failed to parse recipe. Try again."
+        )
+
+        return
+      }
 
       setResult({
-        ...data,
+        ...data.recipe,
 
         ingredients:
-          data.ingredients?.map(
-            (ingredient: any) => ({
+          data.recipe.ingredients.map(
+            (ingredient) => ({
               ...ingredient,
 
               id:
@@ -54,8 +101,8 @@ export default function ParsePage() {
           ) ?? [],
 
         instructions:
-          data.instructions?.map(
-            (instruction: any) => ({
+          data.recipe.instructions.map(
+            (instruction) => ({
               ...instruction,
 
               id:
@@ -63,6 +110,10 @@ export default function ParsePage() {
             })
           ) ?? [],
       })
+    } catch {
+      setParseError(
+        "Something went wrong while parsing. Try again in a moment."
+      )
     } finally {
       setLoading(false)
     }
@@ -84,9 +135,10 @@ export default function ParsePage() {
 
       <textarea
         value={recipe}
-        onChange={(e) =>
+        onChange={(e) => {
           setRecipe(e.target.value)
-        }
+          setParseError(null)
+        }}
         className="border border-zinc-800 bg-zinc-900 rounded-xl w-full h-64 p-4"
         placeholder="Paste recipe..."
       />
@@ -100,6 +152,18 @@ export default function ParsePage() {
           ? "Parsing..."
           : "Parse"}
       </button>
+
+      {parseError && (
+        <div className="border border-red-800 bg-red-950/40 rounded-xl p-4 text-red-200">
+          <div className="font-semibold">
+            Could not parse recipe
+          </div>
+
+          <div className="text-sm mt-2 text-red-100/80">
+            {parseError}
+          </div>
+        </div>
+      )}
 
       {result && (
         <RecipeEditor

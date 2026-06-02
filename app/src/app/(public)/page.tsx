@@ -24,13 +24,6 @@ export default function HomePage() {
             >
               Start Parsing
             </a>
-
-            <a
-              href="/about"
-              className="border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 px-6 py-4 rounded-2xl font-semibold transition-colors"
-            >
-              Learn More
-            </a>
           </div>
         </div>
       </section>

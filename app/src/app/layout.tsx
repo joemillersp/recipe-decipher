@@ -2,7 +2,7 @@ import "./globals.css"
 import Link from "next/link"
 
 import { getUser } from "@/lib/getUser"
-import UserMenu from "@/components/UserMenu"
+import HeaderNav from "@/components/HeaderNav"
 
 export const dynamic = "force-dynamic"
 
@@ -27,72 +27,34 @@ export default async function RootLayout({
           <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
             <Link
               href="/"
-              className="flex items-center gap-3"
+              className="min-w-0 flex items-center gap-3"
             >
-              <div className="w-9 h-9 rounded-xl bg-white text-zinc-950 flex items-center justify-center font-bold">
+              <div className="w-9 h-9 shrink-0 rounded-xl bg-white text-zinc-950 flex items-center justify-center font-bold">
                 RD
               </div>
 
-              <div>
-                <div className="font-bold text-lg leading-none">
+              <div className="min-w-0">
+                <div className="font-bold text-lg leading-none truncate">
                   Recipe Decipher
                 </div>
 
-                <div className="text-xs text-zinc-400">
+                <div className="hidden sm:block text-xs text-zinc-400">
                   Structured cooking intel
                 </div>
               </div>
             </Link>
 
-            <nav className="flex items-center gap-6 text-sm font-medium">
-              {user && (
-                <>
-                  <Link
-                    href="/recipes"
-                    className="text-zinc-300 hover:text-white transition-colors"
-                  >
-                    Recipes
-                  </Link>
-
-                  <Link
-                    href="/recipes/my"
-                    className="text-zinc-300 hover:text-white transition-colors"
-                  >
-                    My Recipes
-                  </Link>
-
-                  <Link
-                    href="/parse"
-                    className="text-zinc-300 hover:text-white transition-colors"
-                  >
-                    Parse
-                  </Link>
-                </>
-              )}
-
-              {!user ? (
-                <>
-                  <Link
-                    href="/create-account"
-                    className="text-zinc-300 hover:text-white transition-colors"
-                  >
-                    Create Account
-                  </Link>
-
-                  <Link
-                    href="/login"
-                    className="border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 px-4 py-2 rounded-xl transition-colors"
-                  >
-                    Login
-                  </Link>
-                </>
-              ) : (
-                <UserMenu
-                  email={user.email ?? ""}
-                  displayName={displayName}
-                />
-              )}
-            </nav>
+            <HeaderNav
+              user={
+                user
+                  ? {
+                    email:
+                      user.email ?? "",
+                    displayName,
+                  }
+                  : null
+              }
+            />
           </div>
         </header>
 

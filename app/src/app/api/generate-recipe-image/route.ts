@@ -3,11 +3,26 @@ import OpenAI from "openai"
 import fs from "fs/promises"
 import path from "path"
 
+const IMAGE_GENERATION_ENABLED =
+  false
+
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 })
 
 export async function POST(req: Request) {
+  if (!IMAGE_GENERATION_ENABLED) {
+    return Response.json(
+      {
+        error:
+          "Recipe image generation is disabled.",
+      },
+      {
+        status: 410,
+      }
+    )
+  }
+
   try {
     const body = await req.json()
 

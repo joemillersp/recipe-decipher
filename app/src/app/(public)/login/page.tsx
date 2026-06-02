@@ -47,6 +47,16 @@ export default function LoginPage() {
     }
   }
 
+  async function signInWithGithub() {
+    await supabase.auth.signInWithOAuth({
+      provider: "github",
+      options: {
+        redirectTo:
+          `${window.location.origin}/auth/confirm`,
+      },
+    })
+  }
+
   return (
     <div className="max-w-md space-y-6">
       <div>
@@ -55,11 +65,19 @@ export default function LoginPage() {
         </h1>
 
         <p className="text-zinc-400 mt-3">
-          Sign in to an existing account with a magic link.
+          Sign in with GitHub or use a magic link for an existing account.
         </p>
       </div>
 
-      <div className="space-y-4">
+      <button
+        type="button"
+        onClick={signInWithGithub}
+        className="w-full border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 px-6 py-3 rounded-xl transition-colors"
+      >
+        Continue with GitHub
+      </button>
+
+      <div className="border-t border-zinc-800 pt-6 space-y-4">
         <input
           type="email"
           placeholder="Email"

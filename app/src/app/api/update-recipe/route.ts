@@ -28,8 +28,7 @@ export async function POST(req: Request) {
     .from("recipes")
     .select(`
       id,
-      user_id,
-      hero_image_url
+      user_id
     `)
     .eq("slug", recipe.slug)
     .is("deleted_at", null)
@@ -62,51 +61,6 @@ export async function POST(req: Request) {
         status: 401,
       }
     )
-  }
-
-  let heroImageUrl =
-    existingRecipe.hero_image_url
-
-  if (recipe.generatedImage) {
-    const base64Data =
-      recipe.generatedImage.replace(
-        /^data:image\/png;base64,/,
-        ""
-      )
-
-    const buffer = Buffer.from(
-      base64Data,
-      "base64"
-    )
-
-    const fileName = `${crypto.randomUUID()}.png`
-
-    const {
-      error: uploadError,
-    } = await supabase.storage
-      .from("recipe-images")
-      .upload(
-        fileName,
-        buffer,
-        {
-          contentType:
-            "image/png",
-        }
-      )
-
-    if (!uploadError) {
-      const { data } =
-        supabase.storage
-          .from(
-            "recipe-images"
-          )
-          .getPublicUrl(
-            fileName
-          )
-
-      heroImageUrl =
-        data.publicUrl
-    }
   }
 
   const {
@@ -146,9 +100,6 @@ export async function POST(req: Request) {
 
       servings_provenance:
         recipe.servingsProvenance,
-
-      hero_image_url:
-        heroImageUrl,
     })
     .eq(
       "id",
