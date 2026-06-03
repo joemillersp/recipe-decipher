@@ -1,7 +1,7 @@
 export default function HomePage() {
   return (
     <div className="space-y-16">
-      <section className="py-20">
+      <section className="py-5">
         <div className="max-w-4xl">
           <div className="inline-flex items-center gap-2 border border-zinc-800 bg-zinc-900 rounded-full px-4 py-2 text-sm text-zinc-400 mb-8">
             AI-powered cooking intelligence
