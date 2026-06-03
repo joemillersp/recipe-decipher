@@ -16,7 +16,7 @@ function clearSupabaseCookies(
     })
 }
 
-export async function middleware(
+export async function proxy(
   request: NextRequest
 ) {
   let response = NextResponse.next({
